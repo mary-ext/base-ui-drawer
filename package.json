@@ -8,7 +8,8 @@
 		"build": "tsc -b && vite build",
 		"fmt": "oxfmt",
 		"lint": "oxlint",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"test": "vitest"
 	},
 	"dependencies": {
 		"@base-ui/react": "^1.3.0",
@@ -26,12 +27,15 @@
 		"@types/react": "^19.2.14",
 		"@types/react-dom": "^19.2.3",
 		"@vitejs/plugin-react": "^6.0.1",
+		"@vitest/browser-playwright": "^4.1.1",
 		"babel-plugin-react-compiler": "^1.0.0",
 		"oxfmt": "^0.41.0",
 		"oxlint": "^1.56.0",
 		"oxlint-tsgolint": "^0.17.1",
 		"tailwindcss": "^4.2.2",
 		"typescript": "~5.9.3",
-		"vite": "^8.0.1"
+		"vite": "^8.0.1",
+		"vitest": "^4.1.1",
+		"vitest-browser-react": "^2.1.0"
 	}
 }

@@ -11,5 +11,11 @@
 	},
 	"rules": {
 		"react/react-in-jsx-scope": "off"
-	}
+	},
+	"overrides": [
+		{
+			"files": ["**/*.test.{ts,tsx}"],
+			"plugins": ["vitest"]
+		}
+	]
 }
