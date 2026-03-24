@@ -68,10 +68,8 @@ export function useDrag(params: UseDragParams) {
 			});
 		};
 
-		const handleUp = (event: PointerEvent) => {
-			if (!(event.target instanceof HTMLButtonElement)) {
-				reset();
-			}
+		const handleUp = () => {
+			reset();
 			document.removeEventListener('pointermove', handleMove);
 			document.removeEventListener('pointerup', handleUp);
 		};
@@ -91,12 +89,10 @@ export function useDrag(params: UseDragParams) {
 			document.addEventListener('pointerup', handleUp);
 		};
 
+		// prevent clicks from firing after a drag (e.g. on links or buttons)
 		const handleClick = (event: MouseEvent) => {
 			if (accumulatedDragRef.current > 5) {
 				event.preventDefault();
-			}
-			if (isDraggingRef.current) {
-				reset();
 			}
 		};
 
