@@ -11,10 +11,6 @@ export interface DrawerContextValue {
 export const DrawerContext = createContext<DrawerContextValue | null>(null);
 
 /**
- * reads the nearest DrawerContext and returns the store.
- * @throws when used outside a `Drawer.Root`
- */
-/**
  * reads the nearest DrawerContext.
  * @throws when used outside a `Drawer.Root`
  */

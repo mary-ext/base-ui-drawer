@@ -1,6 +1,6 @@
 import { Dialog } from '@base-ui/react/dialog';
 import { useRefWithInit } from '@base-ui/utils/useRefWithInit';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { DrawerContext, type DrawerContextValue } from './drawer-context';
 import { DrawerStore } from './drawer-store';
@@ -30,6 +30,8 @@ export interface DrawerRootProps {
 	 * defaults to the largest snap point.
 	 */
 	defaultSnapPoint?: number;
+	/** callback fired when the active snap point changes */
+	onSnapPointChange?: (snapIndex: number) => void;
 }
 
 /**
@@ -46,6 +48,7 @@ export function DrawerRoot(props: DrawerRootProps) {
 		modal = true,
 		snapPoints,
 		defaultSnapPoint,
+		onSnapPointChange,
 	} = props;
 
 	const store = useRefWithInit(() => new DrawerStore({ open: defaultOpen })).current;
@@ -67,6 +70,25 @@ export function DrawerRoot(props: DrawerRootProps) {
 		},
 		[store, onOpenChangeCompleteProp],
 	);
+
+	// observe snapIndex changes without subscribing DrawerRoot to re-renders.
+	// observe() fires the listener immediately on subscription (skipped via isFirst),
+	// then on every subsequent change.
+	const onSnapPointChangeRef = useRef(onSnapPointChange);
+	onSnapPointChangeRef.current = onSnapPointChange;
+
+	useEffect(() => {
+		let isFirst = true;
+		return store.observe('snapIndex', (snapIndex: number) => {
+			if (isFirst) {
+				isFirst = false;
+				return;
+			}
+			if (store.state.open) {
+				onSnapPointChangeRef.current?.(snapIndex);
+			}
+		});
+	}, [store]);
 
 	const contextValue: DrawerContextValue = useMemo(
 		() => ({ store, snapPoints, defaultSnapPoint }),

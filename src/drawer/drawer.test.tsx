@@ -12,6 +12,7 @@ function TestDrawer(props: {
 	defaultOpen?: boolean;
 	onOpenChange?: (open: boolean, event: { reason: string }) => void;
 	onOpenChangeComplete?: (open: boolean) => void;
+	onSnapPointChange?: (snapIndex: number) => void;
 	contentHeight?: number;
 }) {
 	const { contentHeight = 800, ...rootProps } = props;
@@ -374,5 +375,81 @@ describe('drag interactions', () => {
 
 		const finalScrollTop = await waitForStableScroll(scroller);
 		expect(Math.abs(finalScrollTop - target08)).toBeLessThanOrEqual(2);
+	});
+});
+
+describe('expanded state', () => {
+	test('content does not have data-expanded at a smaller snap point', async () => {
+		render(<TestDrawer snapPoints={[0.3, 0.8]} />);
+
+		await page.getByTestId('trigger').click();
+		await expect.element(page.getByTestId('content')).toBeVisible();
+
+		const scroller = getScroller();
+		await waitForStableScroll(scroller);
+
+		const content = document.querySelector('[data-testid="content"]') as HTMLElement;
+		expect(content.hasAttribute('data-expanded')).toBe(false);
+	});
+
+	test('content gets data-expanded at the last snap point', async () => {
+		render(<TestDrawer defaultOpen snapPoints={[0.3, 0.8]} />);
+		await expect.element(page.getByTestId('content')).toBeVisible();
+
+		const handle = document.querySelector('[data-testid="handle"]') as HTMLElement;
+		const scroller = getScroller();
+		await waitForStableScroll(scroller);
+
+		const handleRect = handle.getBoundingClientRect();
+		const startY = handleRect.top + handleRect.height / 2;
+
+		// fast flick up to expand
+		await simulateDrag(handle, [
+			{ type: 'down', y: startY },
+			{ type: 'move', y: startY - 1, delay: 5 },
+			{ type: 'move', y: startY - 80, delay: 5 },
+			{ type: 'up', y: startY - 80, delay: 5 },
+		]);
+
+		await waitForStableScroll(scroller);
+
+		const content = document.querySelector('[data-testid="content"]') as HTMLElement;
+		await expect.poll(() => content.hasAttribute('data-expanded')).toBe(true);
+	});
+
+	test('without snap points, content always has data-expanded', async () => {
+		render(<TestDrawer defaultOpen />);
+		await expect.element(page.getByTestId('content')).toBeVisible();
+
+		const scroller = getScroller();
+		await waitForStableScroll(scroller);
+
+		const content = document.querySelector('[data-testid="content"]') as HTMLElement;
+		expect(content.hasAttribute('data-expanded')).toBe(true);
+	});
+
+	test('fires onSnapPointChange when snap index changes via drag', async () => {
+		const onSnapPointChange = vi.fn();
+		render(<TestDrawer defaultOpen snapPoints={[0.3, 0.8]} onSnapPointChange={onSnapPointChange} />);
+		await expect.element(page.getByTestId('content')).toBeVisible();
+
+		const handle = document.querySelector('[data-testid="handle"]') as HTMLElement;
+		const scroller = getScroller();
+		await waitForStableScroll(scroller);
+
+		const handleRect = handle.getBoundingClientRect();
+		const startY = handleRect.top + handleRect.height / 2;
+
+		// fast flick up to expand to second snap point
+		await simulateDrag(handle, [
+			{ type: 'down', y: startY },
+			{ type: 'move', y: startY - 1, delay: 5 },
+			{ type: 'move', y: startY - 80, delay: 5 },
+			{ type: 'up', y: startY - 80, delay: 5 },
+		]);
+
+		await waitForStableScroll(scroller);
+		await expect.poll(() => onSnapPointChange.mock.calls.length).toBeGreaterThan(0);
+		expect(onSnapPointChange).toHaveBeenCalledWith(1);
 	});
 });

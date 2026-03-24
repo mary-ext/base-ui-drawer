@@ -243,7 +243,7 @@ function App() {
 			<Drawer.Portal>
 				<Drawer.Backdrop className="fixed inset-0 bg-black opacity-[calc(0.5*var(--drawer-scroll-progress))] transition-opacity duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] data-ending-style:opacity-0 data-starting-style:opacity-0" />
 				<Drawer.Popup className="group transition-opacity duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] data-ending-style:opacity-0 data-snap-dismissed:transition-none!">
-					<Drawer.Content className="relative z-2 mx-auto flex h-full w-135 max-w-full origin-bottom flex-col overflow-clip rounded-t-2xl bg-card pt-14.5 text-card-foreground transition-[translate,scale,border-radius] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-data-ending-style:translate-y-full group-data-nested-dialog-open:scale-95 group-data-nested-dialog-open:overflow-hidden group-data-nested-dialog-open:rounded-t-xl group-data-starting-style:translate-y-full data-snap-dismissed:transition-none!">
+					<Drawer.Content className="group/content relative z-2 mx-auto flex h-full w-135 max-w-full origin-bottom flex-col overflow-clip rounded-t-2xl bg-card pt-14.5 text-card-foreground transition-[translate,scale,border-radius] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-data-ending-style:translate-y-full group-data-nested-dialog-open:scale-95 group-data-nested-dialog-open:overflow-hidden group-data-nested-dialog-open:rounded-t-xl group-data-starting-style:translate-y-full data-snap-dismissed:transition-none!">
 						{/* header — absolute so sticky footer resolves against outer scroller */}
 						<Drawer.Handle className="absolute inset-x-0 top-0 z-5 flex shrink-0 flex-col items-center rounded-t-2xl bg-card pt-2 pb-2 select-none">
 							<span className="mb-2 h-1 w-9 cursor-grab rounded-full bg-muted-foreground/30" />
@@ -295,8 +295,8 @@ function App() {
 							</div>
 						</Drawer.Handle>
 
-						{/* scrollable comment list */}
-						<div className="flex flex-col overflow-y-auto">
+						{/* scrollable comment list — only scrollable when drawer is fully expanded */}
+						<div className="flex flex-col overflow-y-hidden group-data-expanded/content:overflow-y-auto">
 							<Drawer.Description className="sr-only">comment section</Drawer.Description>
 							{initialComments.map((comment) => (
 								<CommentItem key={comment.id} comment={comment} />

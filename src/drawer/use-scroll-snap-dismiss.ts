@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-import { type SnapModel, SCROLL_EPSILON } from './resolve-snap-model';
+import { type SnapModel, SCROLL_EPSILON, findClosestSnapIndex } from './resolve-snap-model';
 
 const SCROLL_PROGRESS_VAR = '--drawer-scroll-progress';
 
@@ -13,6 +13,8 @@ interface UseScrollSnapDismissParams {
 	progressTargets: React.RefObject<HTMLElement | null>[];
 	requestClose: () => void;
 	setSnapDismissed: (value: boolean) => void;
+	setSnapIndex: (value: number) => void;
+	setExpanded: (value: boolean) => void;
 	snapModelRef: React.RefObject<SnapModel | null>;
 }
 
@@ -35,6 +37,8 @@ export function useScrollSnapDismiss(params: UseScrollSnapDismissParams) {
 		progressTargets,
 		requestClose,
 		setSnapDismissed,
+		setSnapIndex,
+		setExpanded,
 		snapModelRef,
 	} = params;
 
@@ -116,6 +120,15 @@ export function useScrollSnapDismiss(params: UseScrollSnapDismissParams) {
 				lastScrollTopRef.current = scroller.scrollTop;
 
 				if (stableCountRef.current >= 10) {
+					// update snap index based on settled position
+					const model = snapModelRef.current;
+					if (model) {
+						const { restingTops } = model;
+						const closest = findClosestSnapIndex(scroller.scrollTop, restingTops);
+						setSnapIndex(closest);
+						setExpanded(closest === restingTops.length - 1);
+					}
+
 					stableCountRef.current = 0;
 					lastScrollTopRef.current = -1;
 					listening = false;
@@ -154,6 +167,8 @@ export function useScrollSnapDismiss(params: UseScrollSnapDismissParams) {
 		progressTargets,
 		requestClose,
 		setSnapDismissed,
+		setSnapIndex,
+		setExpanded,
 		snapModelRef,
 	]);
 }

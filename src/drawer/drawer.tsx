@@ -8,6 +8,17 @@ import { DrawerIndentBackground } from './drawer-indent-background';
 import { DrawerPopup } from './drawer-popup';
 import { DrawerRoot } from './drawer-root';
 
+export { type DrawerContentState, type DrawerContentProps } from './drawer-content';
+export { type DrawerHandleState, type DrawerHandleProps } from './drawer-handle';
+export { type DrawerIndentState, type DrawerIndentProps } from './drawer-indent';
+export {
+	type DrawerIndentBackgroundState,
+	type DrawerIndentBackgroundProps,
+} from './drawer-indent-background';
+export { type DrawerPopupProps } from './drawer-popup';
+export { type DrawerRootProps } from './drawer-root';
+export { type DrawerComponentProps } from './drawer-types';
+
 export const Drawer = {
 	Root: DrawerRoot,
 	Trigger: Dialog.Trigger,

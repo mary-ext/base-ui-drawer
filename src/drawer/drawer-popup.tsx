@@ -3,7 +3,7 @@ import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useDrawerContext } from './drawer-context';
-import { type SnapModel, resolveSnapModel } from './resolve-snap-model';
+import { type SnapModel, findClosestSnapIndex, resolveSnapModel } from './resolve-snap-model';
 import { useScrollSnapDismiss } from './use-scroll-snap-dismiss';
 
 // #region constants
@@ -77,6 +77,8 @@ export function DrawerPopup(props: DrawerPopupProps) {
 	const dragging = store.useState('dragging');
 	const snapDismissed = store.useState('snapDismissed');
 	const setSnapDismissed = store.useStateSetter('snapDismissed');
+	const setSnapIndex = store.useStateSetter('snapIndex');
+	const setExpanded = store.useStateSetter('expanded');
 
 	const progressTargets = useMemo(() => [indentRef, backdropRef], [indentRef, backdropRef]);
 
@@ -96,6 +98,8 @@ export function DrawerPopup(props: DrawerPopupProps) {
 		progressTargets,
 		requestClose: store.requestClose,
 		setSnapDismissed,
+		setSnapIndex,
+		setExpanded,
 		snapModelRef,
 	});
 
@@ -107,6 +111,8 @@ export function DrawerPopup(props: DrawerPopupProps) {
 			setSnapModel(null);
 			setSnapReady(false);
 			hasOpenedRef.current = false;
+			store.set('snapIndex', 0);
+			store.set('expanded', true);
 			return;
 		}
 
@@ -174,7 +180,13 @@ export function DrawerPopup(props: DrawerPopupProps) {
 
 		scroller.scrollTop = snapModel.defaultTop;
 		hasOpenedRef.current = true;
-	}, [open, snapModel, scrollerRef]);
+
+		// set initial snap index from the default position
+		const { restingTops } = snapModel;
+		const closest = findClosestSnapIndex(snapModel.defaultTop, restingTops);
+		store.set('snapIndex', closest);
+		store.set('expanded', closest === restingTops.length - 1);
+	}, [open, snapModel, scrollerRef, store]);
 
 	// enable scroll-snap AFTER the first paint so the browser doesn't override
 	// our programmatic scrollTop with a snap correction.

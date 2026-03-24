@@ -13,6 +13,10 @@ export interface DrawerState {
 	dragging: boolean;
 	/** whether the close was initiated by scroll snap */
 	snapDismissed: boolean;
+	/** index of the currently active snap point in the restingTops array */
+	snapIndex: number;
+	/** whether the drawer is at its last (largest) snap point */
+	expanded: boolean;
 }
 
 // #endregion
@@ -38,6 +42,8 @@ const selectors = {
 	open: createSelector((state: DrawerState) => state.open),
 	dragging: createSelector((state: DrawerState) => state.dragging),
 	snapDismissed: createSelector((state: DrawerState) => state.snapDismissed),
+	snapIndex: createSelector((state: DrawerState) => state.snapIndex),
+	expanded: createSelector((state: DrawerState) => state.expanded),
 };
 
 // #endregion
@@ -55,6 +61,8 @@ export class DrawerStore extends ReactStore<DrawerState, DrawerStoreContext, typ
 				open: false,
 				dragging: false,
 				snapDismissed: false,
+				snapIndex: 0,
+				expanded: true,
 				...initialState,
 			},
 			{

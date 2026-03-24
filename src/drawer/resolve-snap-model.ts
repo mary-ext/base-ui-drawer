@@ -52,6 +52,26 @@ export function resolveSnapModel(
 }
 
 /**
+ * finds the index of the resting position closest to a given scroll position.
+ *
+ * @param position current scrollTop
+ * @param restingTops sorted array of valid resting positions
+ * @returns index into restingTops
+ */
+export function findClosestSnapIndex(position: number, restingTops: number[]): number {
+	let closest = 0;
+	let closestDist = Math.abs(position - restingTops[0]);
+	for (let i = 1; i < restingTops.length; i++) {
+		const dist = Math.abs(position - restingTops[i]);
+		if (dist < closestDist) {
+			closest = i;
+			closestDist = dist;
+		}
+	}
+	return closest;
+}
+
+/**
  * chooses the best snap target after a drag release, factoring in velocity.
  * projects the current position forward using velocity, then picks the
  * nearest candidate.
