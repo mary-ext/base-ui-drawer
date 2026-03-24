@@ -206,15 +206,17 @@ function CommentItem({ comment, isReply = false }: { comment: Comment; isReply?:
 						<button
 							type="button"
 							onClick={() => setShowReplies((v) => !v)}
-							className="mt-2 flex cursor-pointer items-center gap-2 border-0 bg-transparent p-0 text-sm font-medium text-muted-foreground hover:text-foreground"
+							className="mt-2 flex cursor-pointer items-center border-0 bg-transparent p-0 text-sm font-medium text-muted-foreground hover:text-foreground"
 						>
 							<span className="inline-block h-px w-6 bg-muted-foreground/50" />
-							<span>
+
+							<span className="mr-1 ml-2">
 								{showReplies
 									? 'Hide'
 									: `View ${comment.replies.length} ${comment.replies.length === 1 ? 'reply' : 'replies'}`}
 							</span>
-							<ChevronDown size={10} className={`transition-transform ${showReplies ? 'rotate-180' : ''}`} />
+
+							<ChevronDown size={16} className={`transition-transform ${showReplies ? 'rotate-180' : ''}`} />
 						</button>
 					)}
 				</div>
@@ -247,11 +249,11 @@ function App() {
 							<span className="mb-2 h-1 w-9 cursor-grab rounded-full bg-muted-foreground/30" />
 							<div className="flex w-full items-center justify-between px-4">
 								<Drawer.Title className="m-0 text-base font-semibold">{commentCount} comments</Drawer.Title>
-								<div className="flex items-center gap-2">
+								<div className="-mr-1 flex items-center gap-2">
 									{/* nested drawer for sort options */}
 									<Drawer.Root>
 										<Drawer.Trigger className="cursor-pointer border-0 bg-transparent p-1 text-muted-foreground hover:text-foreground">
-											<ArrowDownWideNarrow size={22} />
+											<ArrowDownWideNarrow size={20} />
 										</Drawer.Trigger>
 										<Drawer.Portal>
 											<Drawer.Backdrop
@@ -266,8 +268,8 @@ function App() {
 															<Drawer.Title className="m-0 text-base font-semibold">
 																Sort comments by
 															</Drawer.Title>
-															<Drawer.Close className="cursor-pointer border-0 bg-transparent p-1 text-muted-foreground hover:text-foreground">
-																<X size={22} />
+															<Drawer.Close className="-mr-1 cursor-pointer border-0 bg-transparent p-1 text-muted-foreground hover:text-foreground">
+																<X size={20} />
 															</Drawer.Close>
 														</div>
 													</Drawer.Handle>
@@ -287,7 +289,7 @@ function App() {
 										</Drawer.Portal>
 									</Drawer.Root>
 									<Drawer.Close className="cursor-pointer border-0 bg-transparent p-1 text-muted-foreground hover:text-foreground">
-										<X size={22} />
+										<X size={20} />
 									</Drawer.Close>
 								</div>
 							</div>
