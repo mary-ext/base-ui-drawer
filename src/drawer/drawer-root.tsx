@@ -20,6 +20,16 @@ export interface DrawerRootProps {
 	 * @default true
 	 */
 	modal?: boolean | 'trap-focus';
+	/**
+	 * fractions of viewport height (0-1) where the drawer can rest.
+	 * e.g. `[0.3, 0.6]` means the drawer snaps to 30% and 60% of viewport.
+	 */
+	snapPoints?: number[];
+	/**
+	 * fraction of viewport height (0-1) the drawer opens to initially.
+	 * defaults to the largest snap point.
+	 */
+	defaultSnapPoint?: number;
 }
 
 /**
@@ -34,6 +44,8 @@ export function DrawerRoot(props: DrawerRootProps) {
 		onOpenChange: onOpenChangeProp,
 		onOpenChangeComplete: onOpenChangeCompleteProp,
 		modal = true,
+		snapPoints,
+		defaultSnapPoint,
 	} = props;
 
 	const store = useRefWithInit(() => new DrawerStore({ open: defaultOpen })).current;
@@ -56,7 +68,10 @@ export function DrawerRoot(props: DrawerRootProps) {
 		[store, onOpenChangeCompleteProp],
 	);
 
-	const contextValue: DrawerContextValue = useMemo(() => ({ store }), [store]);
+	const contextValue: DrawerContextValue = useMemo(
+		() => ({ store, snapPoints, defaultSnapPoint }),
+		[store, snapPoints, defaultSnapPoint],
+	);
 
 	return (
 		<DrawerContext value={contextValue}>

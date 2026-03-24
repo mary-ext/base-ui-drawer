@@ -1,12 +1,23 @@
 import { ownerDocument } from '@base-ui/utils/owner';
 import { useEffect, useRef } from 'react';
 
+import { type SnapModel, SCROLL_EPSILON, chooseSnapTarget } from './resolve-snap-model';
+
 interface UseDragParams {
 	open: boolean;
 	scrollerRef: React.RefObject<HTMLDivElement | null>;
 	handleRef: React.RefObject<HTMLDivElement | null>;
+	snapModelRef: React.RefObject<SnapModel | null>;
 	setDragging: (value: boolean) => void;
 }
+
+interface PointerSample {
+	y: number;
+	time: number;
+}
+
+// how far back (ms) to look when computing release velocity
+const VELOCITY_WINDOW = 80;
 
 /**
  * mouse/pen drag handler for the drawer. attaches to a handle element so only
@@ -17,14 +28,14 @@ interface UseDragParams {
  * non-touch pointer types.
  */
 export function useDrag(params: UseDragParams) {
-	const { open, scrollerRef, handleRef, setDragging } = params;
+	const { open, scrollerRef, handleRef, snapModelRef, setDragging } = params;
 
 	const startYRef = useRef(0);
 	const scrollStartRef = useRef(0);
 	const accumulatedDragRef = useRef(0);
 	const isDraggingRef = useRef(false);
-	// tracks the scroll listener from reset() so cleanup can remove it
 	const resetScrollHandlerRef = useRef<(() => void) | null>(null);
+	const samplesRef = useRef<PointerSample[]>([]);
 
 	useEffect(() => {
 		if (!open) {
@@ -39,12 +50,47 @@ export function useDrag(params: UseDragParams) {
 
 		const doc = ownerDocument(handle);
 
+		const computeVelocity = (): number => {
+			const samples = samplesRef.current;
+			if (samples.length < 2) {
+				return 0;
+			}
+			const now = samples[samples.length - 1];
+			// find the oldest sample within the velocity window
+			let oldest = now;
+			for (let i = samples.length - 2; i >= 0; i--) {
+				if (now.time - samples[i].time > VELOCITY_WINDOW) {
+					break;
+				}
+				oldest = samples[i];
+			}
+			const dt = now.time - oldest.time;
+			if (dt === 0) {
+				return 0;
+			}
+			// positive velocity = pointer moving down = scrollTop decreasing (closing)
+			// we want scroll velocity: positive = scrollTop increasing (opening)
+			// pointer dy > 0 means pointer moved down → closing → negative scroll velocity
+			const pointerDy = now.y - oldest.y;
+			return -pointerDy / dt;
+		};
+
 		const reset = () => {
-			const scrollStart = scrollStartRef.current;
-			const top = scroller.scrollTop < scrollStart * 0.5 ? 0 : scrollStart;
+			const model = snapModelRef.current;
+			const velocity = computeVelocity();
+
+			let top: number;
+			if (model) {
+				const candidates = [0, ...model.restingTops];
+				top = chooseSnapTarget(scroller.scrollTop, velocity, candidates, model.maxScrollTop);
+			} else {
+				// fallback: binary open/close
+				const scrollStart = scrollStartRef.current;
+				top = scroller.scrollTop < scrollStart * 0.5 ? 0 : scrollStart;
+			}
 
 			const handleScroll = () => {
-				if (scroller.scrollTop === top) {
+				if (Math.abs(scroller.scrollTop - top) <= SCROLL_EPSILON) {
 					setDragging(false);
 					isDraggingRef.current = false;
 					scroller.removeEventListener('scroll', handleScroll);
@@ -65,6 +111,13 @@ export function useDrag(params: UseDragParams) {
 
 		const handleMove = (event: PointerEvent) => {
 			accumulatedDragRef.current += Math.abs(event.clientY - startYRef.current);
+
+			samplesRef.current.push({ y: event.clientY, time: event.timeStamp });
+			const cutoff = event.timeStamp - VELOCITY_WINDOW * 2;
+			while (samplesRef.current.length > 0 && samplesRef.current[0].time < cutoff) {
+				samplesRef.current.shift();
+			}
+
 			scroller.scrollTo({
 				top: scrollStartRef.current - (event.clientY - startYRef.current),
 				behavior: 'instant',
@@ -85,6 +138,7 @@ export function useDrag(params: UseDragParams) {
 			startYRef.current = event.clientY;
 			scrollStartRef.current = scroller.scrollTop;
 			accumulatedDragRef.current = 0;
+			samplesRef.current = [{ y: event.clientY, time: event.timeStamp }];
 			isDraggingRef.current = true;
 			setDragging(true);
 
@@ -116,5 +170,5 @@ export function useDrag(params: UseDragParams) {
 				resetScrollHandlerRef.current = null;
 			}
 		};
-	}, [open, scrollerRef, handleRef, setDragging]);
+	}, [open, scrollerRef, handleRef, snapModelRef, setDragging]);
 }

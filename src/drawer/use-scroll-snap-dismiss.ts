@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
 
+import { type SnapModel, SCROLL_EPSILON } from './resolve-snap-model';
+
 const SCROLL_PROGRESS_VAR = '--drawer-scroll-progress';
 
 interface UseScrollSnapDismissParams {
@@ -11,12 +13,13 @@ interface UseScrollSnapDismissParams {
 	progressTargets: React.RefObject<HTMLElement | null>[];
 	requestClose: () => void;
 	setSnapDismissed: (value: boolean) => void;
+	snapModelRef: React.RefObject<SnapModel | null>;
 }
 
 const scrollSnapChangeSupported = typeof window !== 'undefined' && 'onscrollsnapchange' in window;
 
 /**
- * detects when the scroller snaps to the top anchor (scrollTop === 0) and
+ * detects when the scroller snaps to the top anchor (scrollTop near 0) and
  * dismisses the drawer. uses `scrollsnapchange` when available, falls back to
  * IntersectionObserver.
  *
@@ -24,15 +27,22 @@ const scrollSnapChangeSupported = typeof window !== 'undefined' && 'onscrollsnap
  * as inline styles on target elements (indent, backdrop, etc.).
  */
 export function useScrollSnapDismiss(params: UseScrollSnapDismissParams) {
-	const { open, scrollerRef, slideRef, topAnchorRef, progressTargets, requestClose, setSnapDismissed } =
-		params;
+	const {
+		open,
+		scrollerRef,
+		slideRef,
+		topAnchorRef,
+		progressTargets,
+		requestClose,
+		setSnapDismissed,
+		snapModelRef,
+	} = params;
 
 	// rAF handle for scroll sync
 	const syncerRef = useRef(0);
-	// rolling buffer to detect when scroll stabilises
-	const syncsRef = useRef(new Array<number>(10));
-	const syncsIndexRef = useRef(0);
-	const frameCountRef = useRef(0);
+	// consecutive frames where scroll has been stable
+	const stableCountRef = useRef(0);
+	const lastScrollTopRef = useRef(-1);
 
 	useEffect(() => {
 		if (!open) {
@@ -50,7 +60,7 @@ export function useScrollSnapDismiss(params: UseScrollSnapDismissParams) {
 		let handleSnapChange: (() => void) | null = null;
 		if (scrollSnapChangeSupported) {
 			handleSnapChange = () => {
-				if (scroller.scrollTop === 0) {
+				if (scroller.scrollTop <= SCROLL_EPSILON) {
 					setSnapDismissed(true);
 					requestClose();
 				}
@@ -65,7 +75,7 @@ export function useScrollSnapDismiss(params: UseScrollSnapDismissParams) {
 				(entries) => {
 					const { isIntersecting, intersectionRatio } = entries[0];
 					const isVisible = intersectionRatio === 1;
-					if (!isVisible && !isIntersecting && scroller.scrollTop < slide.offsetHeight * 0.5) {
+					if (!isVisible && !isIntersecting && scroller.scrollTop <= SCROLL_EPSILON) {
 						setSnapDismissed(true);
 						requestClose();
 						observer?.disconnect();
@@ -83,13 +93,7 @@ export function useScrollSnapDismiss(params: UseScrollSnapDismissParams) {
 		// -- scroll progress sync --
 		// sets --drawer-scroll-progress on target elements as an inline style.
 		// value ranges from 0 (dismissed) to 1 (fully open).
-		const syncs = syncsRef.current;
 		let listening = false;
-
-		const addNumber = (num: number) => {
-			syncs[syncsIndexRef.current] = num;
-			syncsIndexRef.current = (syncsIndexRef.current + 1) % syncs.length;
-		};
 
 		const setProgress = (value: string) => {
 			for (const ref of progressTargets) {
@@ -99,22 +103,24 @@ export function useScrollSnapDismiss(params: UseScrollSnapDismissParams) {
 
 		const syncDrawer = () => {
 			syncerRef.current = requestAnimationFrame(() => {
-				// 0 = dismissed (scrollTop near 0), 1 = fully open (scrollTop near slideHeight)
-				const progress = slide.offsetHeight > 0 ? scroller.scrollTop / slide.offsetHeight : 1;
+				const maxScrollTop = snapModelRef.current?.maxScrollTop ?? slide.offsetHeight;
+				const progress = maxScrollTop > 0 ? scroller.scrollTop / maxScrollTop : 1;
 				setProgress(String(Math.max(0, Math.min(1, progress))));
 
-				// detect when scroll has stabilised at the open position
-				if (syncs.every((v) => v === slide.offsetHeight)) {
-					frameCountRef.current++;
+				// detect when scroll has stabilised at any resting position
+				if (Math.abs(scroller.scrollTop - lastScrollTopRef.current) <= SCROLL_EPSILON) {
+					stableCountRef.current++;
+				} else {
+					stableCountRef.current = 0;
 				}
+				lastScrollTopRef.current = scroller.scrollTop;
 
-				if (frameCountRef.current >= 10) {
-					frameCountRef.current = 0;
-					syncsRef.current = new Array<number>(10);
+				if (stableCountRef.current >= 10) {
+					stableCountRef.current = 0;
+					lastScrollTopRef.current = -1;
 					listening = false;
 					scroller.addEventListener('scroll', onScroll, { once: true });
 				} else {
-					addNumber(scroller.scrollTop);
 					syncDrawer();
 				}
 			});
@@ -140,5 +146,14 @@ export function useScrollSnapDismiss(params: UseScrollSnapDismissParams) {
 			scroller.removeEventListener('scroll', onScroll);
 			setProgress('0');
 		};
-	}, [open, scrollerRef, slideRef, topAnchorRef, progressTargets, requestClose, setSnapDismissed]);
+	}, [
+		open,
+		scrollerRef,
+		slideRef,
+		topAnchorRef,
+		progressTargets,
+		requestClose,
+		setSnapDismissed,
+		snapModelRef,
+	]);
 }

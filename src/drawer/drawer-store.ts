@@ -2,6 +2,8 @@ import type { Dialog } from '@base-ui/react/dialog';
 import { ReactStore, createSelector } from '@base-ui/utils/store';
 import { createRef } from 'react';
 
+import type { SnapModel } from './resolve-snap-model';
+
 // #region state
 
 export interface DrawerState {
@@ -24,6 +26,8 @@ export interface DrawerStoreContext {
 	indentRef: React.RefObject<HTMLDivElement | null>;
 	backdropRef: React.RefObject<HTMLDivElement | null>;
 	actionsRef: React.RefObject<Dialog.Root.Actions | null>;
+	/** mutable ref holding the resolved snap model, updated by ResizeObserver in DrawerPopup */
+	snapModelRef: React.RefObject<SnapModel | null>;
 }
 
 // #endregion
@@ -60,6 +64,7 @@ export class DrawerStore extends ReactStore<DrawerState, DrawerStoreContext, typ
 				indentRef: createRef<HTMLDivElement>(),
 				backdropRef: createRef<HTMLDivElement>(),
 				actionsRef: createRef<Dialog.Root.Actions>(),
+				snapModelRef: createRef<SnapModel>(),
 			},
 			selectors,
 		);

@@ -23,6 +23,7 @@ export function DrawerHandle({ ref: userRef, children, ...rest }: React.Componen
 		open,
 		scrollerRef: store.context.scrollerRef,
 		handleRef,
+		snapModelRef: store.context.snapModelRef,
 		setDragging,
 	});
 
