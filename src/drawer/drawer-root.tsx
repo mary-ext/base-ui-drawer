@@ -51,7 +51,11 @@ export function DrawerRoot(props: DrawerRootProps) {
 		onSnapPointChange,
 	} = props;
 
-	const store = useRefWithInit(() => new DrawerStore({ open: defaultOpen })).current;
+	const store = useRefWithInit(() => new DrawerStore({ open: defaultOpen, openProp })).current;
+
+	// sync the controlled open prop into the store so that
+	// store.useState('open') reflects the controlled value via the openProp ?? open selector
+	store.useControlledProp('openProp', openProp);
 
 	const handleOpenChange = useCallback(
 		(nextOpen: boolean, event: { reason: string }) => {

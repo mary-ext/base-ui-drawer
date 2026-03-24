@@ -7,8 +7,10 @@ import type { SnapModel } from './resolve-snap-model';
 // #region state
 
 export interface DrawerState {
-	/** whether the drawer is open */
+	/** whether the drawer is open (internal state) */
 	open: boolean;
+	/** whether the drawer is open (controlled prop) */
+	readonly openProp: boolean | undefined;
 	/** whether the user is currently dragging the drawer */
 	dragging: boolean;
 	/** whether the close was initiated by scroll snap */
@@ -39,7 +41,7 @@ export interface DrawerStoreContext {
 // #region selectors
 
 const selectors = {
-	open: createSelector((state: DrawerState) => state.open),
+	open: createSelector((state: DrawerState) => state.openProp ?? state.open),
 	dragging: createSelector((state: DrawerState) => state.dragging),
 	snapDismissed: createSelector((state: DrawerState) => state.snapDismissed),
 	snapIndex: createSelector((state: DrawerState) => state.snapIndex),
@@ -59,6 +61,7 @@ export class DrawerStore extends ReactStore<DrawerState, DrawerStoreContext, typ
 		super(
 			{
 				open: false,
+				openProp: undefined,
 				dragging: false,
 				snapDismissed: false,
 				snapIndex: 0,

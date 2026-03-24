@@ -201,6 +201,21 @@ export function DrawerPopup(props: DrawerPopupProps) {
 		}
 	}, [open, snapModel, snapReady]);
 
+	// recover from a blocked dismiss: if the drawer is still open but the scroller
+	// was snapped to the dismiss position (scrollTop ≈ 0), scroll back to the
+	// lowest snap point. this happens when open is controlled to stay true.
+	useEffect(() => {
+		if (!snapDismissed || !open || !snapModel) {
+			return;
+		}
+		const scroller = scrollerRef.current;
+		if (!scroller) {
+			return;
+		}
+		store.set('snapDismissed', false);
+		scroller.scrollTo({ top: snapModel.defaultTop, behavior: 'smooth' });
+	}, [snapDismissed, open, snapModel, scrollerRef, store]);
+
 	// dismiss when clicking outside the drawer content (sides, above, spacer).
 	// also ignore clicks when a nested dialog is open (the parent popup gets
 	// data-nested-dialog-open, and clicks in the nested area shouldn't dismiss the parent).

@@ -9,6 +9,7 @@ import { Drawer } from './drawer';
 function TestDrawer(props: {
 	snapPoints?: number[];
 	defaultSnapPoint?: number;
+	open?: boolean;
 	defaultOpen?: boolean;
 	onOpenChange?: (open: boolean, event: { reason: string }) => void;
 	onOpenChangeComplete?: (open: boolean) => void;
@@ -160,6 +161,47 @@ describe('drawer', () => {
 		await userEvent.keyboard('{Escape}');
 		await expect.element(trigger).toHaveAttribute('aria-expanded', 'false');
 		expect(onOpenChange).toHaveBeenCalledWith(false, expect.objectContaining({ reason: expect.any(String) }));
+	});
+
+	test('opens on mount with controlled open={true}', async () => {
+		render(<TestDrawer open snapPoints={[0.3, 0.6]} />);
+		await expect.element(page.getByTestId('content')).toBeVisible();
+
+		const scroller = getScroller();
+		const scrollTop = await waitForStableScroll(scroller);
+		const expected = Math.round(0.3 * scroller.clientHeight);
+
+		expect(Math.abs(scrollTop - expected)).toBeLessThanOrEqual(2);
+	});
+
+	test('recovers from blocked dismiss when open is locked true', async () => {
+		render(<TestDrawer open snapPoints={[0.3, 0.6]} />);
+		await expect.element(page.getByTestId('content')).toBeVisible();
+
+		const handle = document.querySelector('[data-testid="handle"]') as HTMLElement;
+		const scroller = getScroller();
+		await waitForStableScroll(scroller);
+
+		const handleRect = handle.getBoundingClientRect();
+		const startY = handleRect.top + handleRect.height / 2;
+
+		// drag down far enough to dismiss
+		const dragDistance = Math.round(0.3 * scroller.clientHeight * 0.7);
+		await simulateDrag(handle, [
+			{ type: 'down', y: startY },
+			{ type: 'move', y: startY + 1, delay: 30 },
+			{ type: 'move', y: startY + dragDistance, delay: 30 },
+			{ type: 'up', y: startY + dragDistance, delay: 30 },
+		]);
+
+		// drawer should recover to the default snap point
+		const scrollTop = await waitForStableScroll(scroller);
+		const expected = Math.round(0.3 * scroller.clientHeight);
+		expect(Math.abs(scrollTop - expected)).toBeLessThanOrEqual(2);
+
+		// snapDismissed should be cleared
+		const popup = document.querySelector('[data-testid="popup"]') as HTMLElement;
+		expect(popup.hasAttribute('data-snap-dismissed')).toBe(false);
 	});
 });
 
