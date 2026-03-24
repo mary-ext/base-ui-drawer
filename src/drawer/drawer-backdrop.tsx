@@ -1,7 +1,7 @@
 import { Dialog } from '@base-ui/react/dialog';
-import { useCallback } from 'react';
+import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
 
-import { useDrawerContext } from './drawer-context';
+import { useDrawerStore } from './drawer-context';
 
 type BackdropProps = React.ComponentProps<typeof Dialog.Backdrop>;
 type BackdropState = Dialog.Backdrop.State;
@@ -12,19 +12,8 @@ type BackdropState = Dialog.Backdrop.State;
  * renders a `<div>` element.
  */
 export function DrawerBackdrop({ ref: userRef, style: userStyle, ...rest }: BackdropProps) {
-	const { meta } = useDrawerContext();
-
-	const ref = useCallback(
-		(node: HTMLDivElement | null) => {
-			meta.backdropRef.current = node;
-			if (typeof userRef === 'function') {
-				userRef(node);
-			} else if (userRef) {
-				userRef.current = node;
-			}
-		},
-		[meta.backdropRef, userRef],
-	);
+	const store = useDrawerStore();
+	const ref = useMergedRefs(store.context.backdropRef, userRef);
 
 	// the CSS variable augmentation on CSSProperties conflicts with Base UI's
 	// union style prop type, so we need the assertion here

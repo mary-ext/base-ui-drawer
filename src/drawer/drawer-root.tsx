@@ -1,7 +1,9 @@
 import { Dialog } from '@base-ui/react/dialog';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useRefWithInit } from '@base-ui/utils/useRefWithInit';
+import { useCallback, useMemo } from 'react';
 
 import { DrawerContext, type DrawerContextValue } from './drawer-context';
+import { DrawerStore } from './drawer-store';
 
 export interface DrawerRootProps {
 	children: React.ReactNode;
@@ -34,47 +36,27 @@ export function DrawerRoot(props: DrawerRootProps) {
 		modal = true,
 	} = props;
 
-	const actionsRef = useRef<Dialog.Root.Actions>(null);
-	const scrollerRef = useRef<HTMLDivElement>(null);
-	const slideRef = useRef<HTMLDivElement>(null);
-	const topAnchorRef = useRef<HTMLDivElement>(null);
-	const indentRef = useRef<HTMLDivElement>(null);
-	const backdropRef = useRef<HTMLDivElement>(null);
-
-	const [open, setOpen] = useState(openProp ?? defaultOpen);
-	const [dragging, setDragging] = useState(false);
-	const [snapDismissed, setSnapDismissed] = useState(false);
+	const store = useRefWithInit(() => new DrawerStore({ open: defaultOpen })).current;
 
 	const handleOpenChange = useCallback(
 		(nextOpen: boolean, event: { reason: string }) => {
-			setOpen(nextOpen);
+			store.set('open', nextOpen);
 			onOpenChangeProp?.(nextOpen, event);
 		},
-		[onOpenChangeProp],
+		[store, onOpenChangeProp],
 	);
 
 	const handleOpenChangeComplete = useCallback(
 		(nextOpen: boolean) => {
 			if (!nextOpen) {
-				setSnapDismissed(false);
+				store.set('snapDismissed', false);
 			}
 			onOpenChangeCompleteProp?.(nextOpen);
 		},
-		[onOpenChangeCompleteProp],
+		[store, onOpenChangeCompleteProp],
 	);
 
-	const requestClose = useCallback(() => {
-		actionsRef.current?.close();
-	}, []);
-
-	const contextValue: DrawerContextValue = useMemo(
-		() => ({
-			state: { open, dragging, snapDismissed },
-			actions: { requestClose, setDragging, setSnapDismissed },
-			meta: { scrollerRef, slideRef, topAnchorRef, indentRef, backdropRef },
-		}),
-		[open, dragging, snapDismissed, requestClose],
-	);
+	const contextValue: DrawerContextValue = useMemo(() => ({ store }), [store]);
 
 	return (
 		<DrawerContext value={contextValue}>
@@ -84,7 +66,7 @@ export function DrawerRoot(props: DrawerRootProps) {
 				onOpenChange={handleOpenChange}
 				onOpenChangeComplete={handleOpenChangeComplete}
 				modal={modal}
-				actionsRef={actionsRef}
+				actionsRef={store.context.actionsRef}
 				disablePointerDismissal
 			>
 				{children}

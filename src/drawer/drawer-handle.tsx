@@ -1,6 +1,7 @@
-import { useCallback, useRef } from 'react';
+import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
+import { useRef } from 'react';
 
-import { useDrawerContext } from './drawer-context';
+import { useDrawerStore } from './drawer-context';
 import { useDrag } from './use-drag';
 
 /**
@@ -9,30 +10,24 @@ import { useDrag } from './use-drag';
  * other affordance is up to the consumer.
  */
 export function DrawerHandle({ ref: userRef, children, ...rest }: React.ComponentPropsWithRef<'div'>) {
-	const { state, actions, meta } = useDrawerContext();
-	const handleRef = useRef<HTMLDivElement>(null);
+	const store = useDrawerStore();
 
-	const ref = useCallback(
-		(node: HTMLDivElement | null) => {
-			handleRef.current = node;
-			if (typeof userRef === 'function') {
-				userRef(node);
-			} else if (userRef) {
-				userRef.current = node;
-			}
-		},
-		[userRef],
-	);
+	const dragging = store.useState('dragging');
+	const open = store.useState('open');
+	const setDragging = store.useStateSetter('dragging');
+
+	const handleRef = useRef<HTMLDivElement>(null);
+	const ref = useMergedRefs(handleRef, userRef);
 
 	useDrag({
-		open: state.open,
-		scrollerRef: meta.scrollerRef,
+		open,
+		scrollerRef: store.context.scrollerRef,
 		handleRef,
-		setDragging: actions.setDragging,
+		setDragging,
 	});
 
 	return (
-		<div ref={ref} data-dragging={state.dragging || undefined} {...rest}>
+		<div ref={ref} data-dragging={dragging || undefined} {...rest}>
 			{children}
 		</div>
 	);

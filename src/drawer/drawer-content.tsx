@@ -1,4 +1,4 @@
-import { useDrawerContext } from './drawer-context';
+import { useDrawerStore } from './drawer-context';
 
 /**
  * a container for the visible drawer contents.
@@ -7,15 +7,20 @@ import { useDrawerContext } from './drawer-context';
  */
 export function DrawerContent(props: React.ComponentPropsWithRef<'div'>) {
 	const { children, ...rest } = props;
-	const { state } = useDrawerContext();
+
+	const store = useDrawerStore();
+
+	const open = store.useState('open');
+	const dragging = store.useState('dragging');
+	const snapDismissed = store.useState('snapDismissed');
 
 	return (
 		<div
 			data-drawer-content=""
-			data-open={state.open ? '' : undefined}
-			data-closed={state.open ? undefined : ''}
-			data-dragging={state.dragging || undefined}
-			data-snap-dismissed={state.snapDismissed || undefined}
+			data-open={open ? '' : undefined}
+			data-closed={open ? undefined : ''}
+			data-dragging={dragging || undefined}
+			data-snap-dismissed={snapDismissed || undefined}
 			{...rest}
 		>
 			{children}

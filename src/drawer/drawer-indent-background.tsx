@@ -1,4 +1,4 @@
-import { useDrawerContext } from './drawer-context';
+import { useDrawerStore } from './drawer-context';
 
 /**
  * a background element placed behind `Drawer.Indent`.
@@ -7,10 +7,12 @@ import { useDrawerContext } from './drawer-context';
  */
 export function DrawerIndentBackground(props: React.ComponentPropsWithRef<'div'>) {
 	const { children, ...rest } = props;
-	const { state } = useDrawerContext();
+
+	const store = useDrawerStore();
+	const open = store.useState('open');
 
 	return (
-		<div data-active={state.open ? '' : undefined} data-inactive={state.open ? undefined : ''} {...rest}>
+		<div data-active={open ? '' : undefined} data-inactive={open ? undefined : ''} {...rest}>
 			{children}
 		</div>
 	);

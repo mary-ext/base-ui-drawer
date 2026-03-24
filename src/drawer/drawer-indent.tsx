@@ -1,6 +1,6 @@
-import { useCallback } from 'react';
+import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
 
-import { useDrawerContext } from './drawer-context';
+import { useDrawerStore } from './drawer-context';
 
 /**
  * a wrapper element for your main UI that receives state when a drawer is open.
@@ -9,25 +9,16 @@ import { useDrawerContext } from './drawer-context';
  * renders a `<div>` element.
  */
 export function DrawerIndent({ ref: userRef, children, style, ...rest }: React.ComponentPropsWithRef<'div'>) {
-	const { state, meta } = useDrawerContext();
+	const store = useDrawerStore();
+	const open = store.useState('open');
 
-	const ref = useCallback(
-		(node: HTMLDivElement | null) => {
-			meta.indentRef.current = node;
-			if (typeof userRef === 'function') {
-				userRef(node);
-			} else if (userRef) {
-				userRef.current = node;
-			}
-		},
-		[meta.indentRef, userRef],
-	);
+	const ref = useMergedRefs(store.context.indentRef, userRef);
 
 	return (
 		<div
 			ref={ref}
-			data-active={state.open ? '' : undefined}
-			data-inactive={state.open ? undefined : ''}
+			data-active={open ? '' : undefined}
+			data-inactive={open ? undefined : ''}
 			style={{
 				'--drawer-scroll-progress': '1',
 				...style,

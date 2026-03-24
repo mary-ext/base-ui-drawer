@@ -1,7 +1,8 @@
 import { Dialog } from '@base-ui/react/dialog';
-import { useLayoutEffect, useMemo } from 'react';
+import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
+import { useMemo } from 'react';
 
-import { useDrawerContext } from './drawer-context';
+import { useDrawerStore } from './drawer-context';
 import { useScrollSnapDismiss } from './use-scroll-snap-dismiss';
 
 // #region structural styles (functional only, no visual styling)
@@ -68,10 +69,12 @@ export interface DrawerPopupProps extends React.ComponentProps<typeof Dialog.Pop
 export function DrawerPopup(props: DrawerPopupProps) {
 	const { children, style, ...rest } = props;
 
-	const { state, actions, meta } = useDrawerContext();
-	const { open, dragging, snapDismissed } = state;
-	const { requestClose, setSnapDismissed } = actions;
-	const { scrollerRef, slideRef, topAnchorRef, indentRef, backdropRef } = meta;
+	const store = useDrawerStore();
+	const { scrollerRef, slideRef, topAnchorRef, indentRef, backdropRef } = store.context;
+	const open = store.useState('open');
+	const dragging = store.useState('dragging');
+	const snapDismissed = store.useState('snapDismissed');
+	const setSnapDismissed = store.useStateSetter('snapDismissed');
 
 	const progressTargets = useMemo(() => [indentRef, backdropRef], [indentRef, backdropRef]);
 
@@ -82,12 +85,12 @@ export function DrawerPopup(props: DrawerPopupProps) {
 		slideRef,
 		topAnchorRef,
 		progressTargets,
-		requestClose,
+		requestClose: store.requestClose,
 		setSnapDismissed,
 	});
 
 	// scroll to bottom (open position) when the drawer opens
-	useLayoutEffect(() => {
+	useIsoLayoutEffect(() => {
 		if (!open) {
 			return;
 		}
@@ -111,7 +114,7 @@ export function DrawerPopup(props: DrawerPopupProps) {
 			return;
 		}
 		if (!event.target.closest('[data-drawer-content]')) {
-			requestClose();
+			store.requestClose();
 		}
 	};
 

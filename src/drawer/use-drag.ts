@@ -1,3 +1,4 @@
+import { ownerDocument } from '@base-ui/utils/owner';
 import { useEffect, useRef } from 'react';
 
 interface UseDragParams {
@@ -36,6 +37,8 @@ export function useDrag(params: UseDragParams) {
 			return;
 		}
 
+		const doc = ownerDocument(handle);
+
 		const reset = () => {
 			const scrollStart = scrollStartRef.current;
 			const top = scroller.scrollTop < scrollStart * 0.5 ? 0 : scrollStart;
@@ -70,8 +73,8 @@ export function useDrag(params: UseDragParams) {
 
 		const handleUp = () => {
 			reset();
-			document.removeEventListener('pointermove', handleMove);
-			document.removeEventListener('pointerup', handleUp);
+			doc.removeEventListener('pointermove', handleMove);
+			doc.removeEventListener('pointerup', handleUp);
 		};
 
 		const handleDown = (event: PointerEvent) => {
@@ -85,8 +88,8 @@ export function useDrag(params: UseDragParams) {
 			isDraggingRef.current = true;
 			setDragging(true);
 
-			document.addEventListener('pointermove', handleMove);
-			document.addEventListener('pointerup', handleUp);
+			doc.addEventListener('pointermove', handleMove);
+			doc.addEventListener('pointerup', handleUp);
 		};
 
 		// prevent clicks from firing after a drag (e.g. on links or buttons)
@@ -102,8 +105,12 @@ export function useDrag(params: UseDragParams) {
 		return () => {
 			handle.removeEventListener('pointerdown', handleDown);
 			handle.removeEventListener('click', handleClick);
-			document.removeEventListener('pointermove', handleMove);
-			document.removeEventListener('pointerup', handleUp);
+			doc.removeEventListener('pointermove', handleMove);
+			doc.removeEventListener('pointerup', handleUp);
+			if (isDraggingRef.current) {
+				setDragging(false);
+				isDraggingRef.current = false;
+			}
 			if (resetScrollHandlerRef.current) {
 				scroller.removeEventListener('scroll', resetScrollHandlerRef.current);
 				resetScrollHandlerRef.current = null;

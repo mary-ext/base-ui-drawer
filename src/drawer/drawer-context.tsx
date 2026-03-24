@@ -1,48 +1,21 @@
 import { createContext, use } from 'react';
 
-// #region types
-
-export interface DrawerState {
-	/** whether the drawer is open */
-	open: boolean;
-	/** whether the user is currently dragging the drawer */
-	dragging: boolean;
-	/** whether the close was initiated by scroll snap */
-	snapDismissed: boolean;
-}
-
-export interface DrawerActions {
-	requestClose: () => void;
-	setDragging: (value: boolean) => void;
-	setSnapDismissed: (value: boolean) => void;
-}
-
-export interface DrawerMeta {
-	scrollerRef: React.RefObject<HTMLDivElement | null>;
-	slideRef: React.RefObject<HTMLDivElement | null>;
-	topAnchorRef: React.RefObject<HTMLDivElement | null>;
-	indentRef: React.RefObject<HTMLDivElement | null>;
-	backdropRef: React.RefObject<HTMLDivElement | null>;
-}
+import type { DrawerStore } from './drawer-store';
 
 export interface DrawerContextValue {
-	state: DrawerState;
-	actions: DrawerActions;
-	meta: DrawerMeta;
+	store: DrawerStore;
 }
-
-// #endregion
 
 export const DrawerContext = createContext<DrawerContextValue | null>(null);
 
 /**
- * reads the nearest DrawerContext.
+ * reads the nearest DrawerContext and returns the store.
  * @throws when used outside a `Drawer.Root`
  */
-export function useDrawerContext(): DrawerContextValue {
+export function useDrawerStore(): DrawerStore {
 	const context = use(DrawerContext);
 	if (context === null) {
 		throw new Error(`Base UI: Drawer compound components must be rendered inside a Drawer.Root.`);
 	}
-	return context;
+	return context.store;
 }
