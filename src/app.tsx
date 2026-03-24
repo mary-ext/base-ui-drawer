@@ -231,7 +231,7 @@ function App() {
 	const commentCount = initialComments.reduce((sum, c) => sum + 1 + (c.replies?.length ?? 0), 0);
 
 	return (
-		<Drawer.Root snapPoints={[0.4, 0.95]}>
+		<Drawer.Root snapPoints={[0.5, 1]}>
 			<Drawer.IndentBackground className="fixed inset-0 bg-black" />
 			<Drawer.Indent className="relative grid min-h-svh w-full origin-[center_top] transform-[scale(1)_translateY(0)] place-items-center content-center gap-4 bg-background duration-[calc(500ms*var(--t)),calc(250ms*var(--t))] will-change-transform [--p:var(--drawer-scroll-progress)] [--radius:calc(var(--radius-xl)*var(--p))] [--t:calc(1-clamp(0,calc((1-var(--p))*100000),1))] [transition:transform_0.5s_cubic-bezier(0.32,0.72,0,1),border-radius_0.25s_cubic-bezier(0.32,0.72,0,1)] data-active:transform-[scale(calc(1-0.04*var(--p)))_translateY(calc(12px*var(--p)))] data-active:overflow-hidden data-active:rounded-(--radius)">
 				<h1 className="text-5xl font-bold sm:text-7xl">drawer</h1>
