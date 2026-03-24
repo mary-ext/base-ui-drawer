@@ -1,7 +1,7 @@
 import { useRender } from '@base-ui/react/use-render';
 import { useRef } from 'react';
 
-import { useDrawerStore } from './drawer-context';
+import { useDrawerContext } from './drawer-context';
 import type { DrawerComponentProps } from './drawer-types';
 import { useDrag } from './use-drag';
 
@@ -30,7 +30,7 @@ export interface DrawerHandleProps extends DrawerComponentProps<DrawerHandleStat
 export function DrawerHandle(props: DrawerHandleProps) {
 	const { className: classNameProp, style: styleProp, render, ref, ...rest } = props;
 
-	const store = useDrawerStore();
+	const { store, locked } = useDrawerContext();
 
 	const dragging = store.useState('dragging');
 	const expanded = store.useState('expanded');
@@ -41,6 +41,7 @@ export function DrawerHandle(props: DrawerHandleProps) {
 
 	useDrag({
 		open,
+		locked,
 		scrollerRef: store.context.scrollerRef,
 		handleRef,
 		snapModelRef: store.context.snapModelRef,

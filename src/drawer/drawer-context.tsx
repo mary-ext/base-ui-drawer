@@ -6,6 +6,7 @@ export interface DrawerContextValue {
 	store: DrawerStore;
 	snapPoints?: number[];
 	defaultSnapPoint?: number;
+	locked: boolean;
 }
 
 export const DrawerContext = createContext<DrawerContextValue | null>(null);

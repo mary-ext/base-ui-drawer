@@ -11,6 +11,7 @@ function TestDrawer(props: {
 	defaultSnapPoint?: number;
 	open?: boolean;
 	defaultOpen?: boolean;
+	locked?: boolean;
 	onOpenChange?: (open: boolean, event: { reason: string }) => void;
 	onOpenChangeComplete?: (open: boolean) => void;
 	onSnapPointChange?: (snapIndex: number) => void;
@@ -202,6 +203,34 @@ describe('drawer', () => {
 		// snapDismissed should be cleared
 		const popup = document.querySelector('[data-testid="popup"]') as HTMLElement;
 		expect(popup.hasAttribute('data-snap-dismissed')).toBe(false);
+	});
+
+	test('locked prevents drag dismiss and snap navigation', async () => {
+		render(<TestDrawer open snapPoints={[0.3, 0.8]} locked />);
+		await expect.element(page.getByTestId('content')).toBeVisible();
+
+		const handle = document.querySelector('[data-testid="handle"]') as HTMLElement;
+		const scroller = getScroller();
+		const startScrollTop = await waitForStableScroll(scroller);
+
+		const handleRect = handle.getBoundingClientRect();
+		const startY = handleRect.top + handleRect.height / 2;
+
+		// attempt to drag up — should have no effect
+		await simulateDrag(handle, [
+			{ type: 'down', y: startY },
+			{ type: 'move', y: startY - 1, delay: 30 },
+			{ type: 'move', y: startY - 200, delay: 30 },
+			{ type: 'up', y: startY - 200, delay: 30 },
+		]);
+
+		await wait(500);
+		expect(Math.abs(scroller.scrollTop - startScrollTop)).toBeLessThanOrEqual(2);
+
+		// attempt escape — should not close
+		await userEvent.keyboard('{Escape}');
+		await wait(500);
+		await expect.element(page.getByTestId('content')).toBeVisible();
 	});
 });
 

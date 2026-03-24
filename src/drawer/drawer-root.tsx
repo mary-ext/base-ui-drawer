@@ -32,6 +32,15 @@ export interface DrawerRootProps {
 	defaultSnapPoint?: number;
 	/** callback fired when the active snap point changes */
 	onSnapPointChange?: (snapIndex: number) => void;
+	/**
+	 * whether the drawer is locked at its current snap position.
+	 * when `true`, all positional user interaction is disabled — drag, scroll snap,
+	 * escape, and click-outside dismiss. programmatic control via the `open` prop
+	 * still works. useful during async operations where the drawer should not be
+	 * dismissed until the operation completes.
+	 * @default false
+	 */
+	locked?: boolean;
 }
 
 /**
@@ -49,6 +58,7 @@ export function DrawerRoot(props: DrawerRootProps) {
 		snapPoints,
 		defaultSnapPoint,
 		onSnapPointChange,
+		locked = false,
 	} = props;
 
 	const store = useRefWithInit(() => new DrawerStore({ open: defaultOpen, openProp })).current;
@@ -59,10 +69,14 @@ export function DrawerRoot(props: DrawerRootProps) {
 
 	const handleOpenChange = useCallback(
 		(nextOpen: boolean, event: { reason: string }) => {
+			// block user-initiated closes when locked
+			if (!nextOpen && locked) {
+				return;
+			}
 			store.set('open', nextOpen);
 			onOpenChangeProp?.(nextOpen, event);
 		},
-		[store, onOpenChangeProp],
+		[store, onOpenChangeProp, locked],
 	);
 
 	const handleOpenChangeComplete = useCallback(
@@ -95,8 +109,8 @@ export function DrawerRoot(props: DrawerRootProps) {
 	}, [store]);
 
 	const contextValue: DrawerContextValue = useMemo(
-		() => ({ store, snapPoints, defaultSnapPoint }),
-		[store, snapPoints, defaultSnapPoint],
+		() => ({ store, snapPoints, defaultSnapPoint, locked }),
+		[store, snapPoints, defaultSnapPoint, locked],
 	);
 
 	return (

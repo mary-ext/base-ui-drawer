@@ -5,6 +5,7 @@ import { type SnapModel, SCROLL_EPSILON, chooseSnapTarget } from './resolve-snap
 
 interface UseDragParams {
 	open: boolean;
+	locked: boolean;
 	scrollerRef: React.RefObject<HTMLDivElement | null>;
 	handleRef: React.RefObject<HTMLDivElement | null>;
 	snapModelRef: React.RefObject<SnapModel | null>;
@@ -28,7 +29,7 @@ const VELOCITY_WINDOW = 80;
  * non-touch pointer types.
  */
 export function useDrag(params: UseDragParams) {
-	const { open, scrollerRef, handleRef, snapModelRef, setDragging } = params;
+	const { open, locked, scrollerRef, handleRef, snapModelRef, setDragging } = params;
 
 	const startYRef = useRef(0);
 	const scrollStartRef = useRef(0);
@@ -38,7 +39,7 @@ export function useDrag(params: UseDragParams) {
 	const samplesRef = useRef<PointerSample[]>([]);
 
 	useEffect(() => {
-		if (!open) {
+		if (!open || locked) {
 			return;
 		}
 
@@ -170,5 +171,5 @@ export function useDrag(params: UseDragParams) {
 				resetScrollHandlerRef.current = null;
 			}
 		};
-	}, [open, scrollerRef, handleRef, snapModelRef, setDragging]);
+	}, [open, locked, scrollerRef, handleRef, snapModelRef, setDragging]);
 }

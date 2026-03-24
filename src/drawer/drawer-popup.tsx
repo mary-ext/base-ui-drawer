@@ -30,6 +30,12 @@ const scrollerNoSnapStyle: React.CSSProperties = {
 	scrollSnapType: 'none',
 };
 
+const scrollerLockedStyle: React.CSSProperties = {
+	...scrollerStyle,
+	scrollSnapType: 'none',
+	overflowY: 'hidden',
+};
+
 const spacerStyle: React.CSSProperties = {
 	order: -1,
 	height: '100svh',
@@ -70,7 +76,7 @@ export interface DrawerPopupProps extends React.ComponentProps<typeof Dialog.Pop
 export function DrawerPopup(props: DrawerPopupProps) {
 	const { children, style, initialFocus, ...rest } = props;
 
-	const { store, snapPoints, defaultSnapPoint } = useDrawerContext();
+	const { store, snapPoints, defaultSnapPoint, locked } = useDrawerContext();
 	const { scrollerRef, slideRef, topAnchorRef, indentRef, backdropRef, snapModelRef } = store.context;
 	const popupRef = useRef<HTMLDivElement>(null);
 	const open = store.useState('open');
@@ -220,6 +226,9 @@ export function DrawerPopup(props: DrawerPopupProps) {
 	// also ignore clicks when a nested dialog is open (the parent popup gets
 	// data-nested-dialog-open, and clicks in the nested area shouldn't dismiss the parent).
 	const handleScrollerClick = (event: React.MouseEvent) => {
+		if (locked) {
+			return;
+		}
 		if (!(event.target instanceof HTMLElement)) {
 			return;
 		}
@@ -233,8 +242,13 @@ export function DrawerPopup(props: DrawerPopupProps) {
 		}
 	};
 
-	// disable scroll-snap during drag and during initial positioning
-	const scrollerActiveStyle = dragging || !snapReady ? scrollerNoSnapStyle : scrollerStyle;
+	// disable scroll-snap during drag and during initial positioning.
+	// when locked, freeze the scroller entirely to prevent snap navigation.
+	const scrollerActiveStyle = locked
+		? scrollerLockedStyle
+		: dragging || !snapReady
+			? scrollerNoSnapStyle
+			: scrollerStyle;
 
 	return (
 		<Dialog.Popup
