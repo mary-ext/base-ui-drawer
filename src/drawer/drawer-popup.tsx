@@ -2,7 +2,6 @@ import { Dialog } from '@base-ui/react/dialog';
 import { useLayoutEffect, useMemo } from 'react';
 
 import { useDrawerContext } from './drawer-context';
-import { useDrag } from './use-drag';
 import { useScrollSnapDismiss } from './use-scroll-snap-dismiss';
 
 // #region structural styles (functional only, no visual styling)
@@ -71,7 +70,7 @@ export function DrawerPopup(props: DrawerPopupProps) {
 
 	const { state, actions, meta } = useDrawerContext();
 	const { open, dragging, snapDismissed } = state;
-	const { requestClose, setDragging, setSnapDismissed } = actions;
+	const { requestClose, setSnapDismissed } = actions;
 	const { scrollerRef, slideRef, topAnchorRef, indentRef, backdropRef } = meta;
 
 	const progressTargets = useMemo(() => [indentRef, backdropRef], [indentRef, backdropRef]);
@@ -85,13 +84,6 @@ export function DrawerPopup(props: DrawerPopupProps) {
 		progressTargets,
 		requestClose,
 		setSnapDismissed,
-	});
-
-	// mouse/pen drag handler
-	useDrag({
-		open,
-		scrollerRef,
-		setDragging,
 	});
 
 	// scroll to bottom (open position) when the drawer opens

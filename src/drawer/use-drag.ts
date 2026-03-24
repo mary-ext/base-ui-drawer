@@ -3,18 +3,20 @@ import { useEffect, useRef } from 'react';
 interface UseDragParams {
 	open: boolean;
 	scrollerRef: React.RefObject<HTMLDivElement | null>;
+	handleRef: React.RefObject<HTMLDivElement | null>;
 	setDragging: (value: boolean) => void;
 }
 
 /**
- * mouse/pen drag handler for the drawer. temporarily disables scroll snap
- * during drag and smooth-scrolls to the nearest snap point on release.
+ * mouse/pen drag handler for the drawer. attaches to a handle element so only
+ * that region initiates drags. temporarily disables scroll snap during drag and
+ * smooth-scrolls to the nearest snap point on release.
  *
  * touch users get native scroll snap behavior — this hook only activates for
  * non-touch pointer types.
  */
 export function useDrag(params: UseDragParams) {
-	const { open, scrollerRef, setDragging } = params;
+	const { open, scrollerRef, handleRef, setDragging } = params;
 
 	const startYRef = useRef(0);
 	const scrollStartRef = useRef(0);
@@ -29,7 +31,8 @@ export function useDrag(params: UseDragParams) {
 		}
 
 		const scroller = scrollerRef.current;
-		if (!scroller) {
+		const handle = handleRef.current;
+		if (!scroller || !handle) {
 			return;
 		}
 
@@ -97,12 +100,12 @@ export function useDrag(params: UseDragParams) {
 			}
 		};
 
-		scroller.addEventListener('pointerdown', handleDown);
-		scroller.addEventListener('click', handleClick);
+		handle.addEventListener('pointerdown', handleDown);
+		handle.addEventListener('click', handleClick);
 
 		return () => {
-			scroller.removeEventListener('pointerdown', handleDown);
-			scroller.removeEventListener('click', handleClick);
+			handle.removeEventListener('pointerdown', handleDown);
+			handle.removeEventListener('click', handleClick);
 			document.removeEventListener('pointermove', handleMove);
 			document.removeEventListener('pointerup', handleUp);
 			if (resetScrollHandlerRef.current) {
@@ -110,5 +113,5 @@ export function useDrag(params: UseDragParams) {
 				resetScrollHandlerRef.current = null;
 			}
 		};
-	}, [open, scrollerRef, setDragging]);
+	}, [open, scrollerRef, handleRef, setDragging]);
 }
