@@ -85,4 +85,34 @@ export class DrawerStore extends ReactStore<DrawerState, DrawerStoreContext, typ
 	requestClose = () => {
 		this.context.actionsRef.current?.close();
 	};
+
+	/**
+	 * smoothly scrolls the drawer to the snap point at the given index.
+	 *
+	 * @param index index into the resolved `restingTops` array (0 = smallest snap point)
+	 */
+	snapTo = (index: number) => {
+		const model = this.context.snapModelRef.current;
+		const scroller = this.context.scrollerRef.current;
+		if (!model || !scroller) {
+			return;
+		}
+		const top = model.restingTops[index];
+		if (top != null) {
+			scroller.scrollTo({ top, behavior: 'smooth' });
+		}
+	};
+
+	/** smoothly scrolls the drawer to its largest snap point */
+	expand = () => {
+		const model = this.context.snapModelRef.current;
+		if (model) {
+			this.snapTo(model.restingTops.length - 1);
+		}
+	};
+
+	/** smoothly scrolls the drawer to its smallest snap point */
+	collapse = () => {
+		this.snapTo(0);
+	};
 }

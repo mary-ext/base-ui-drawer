@@ -18,6 +18,7 @@ export {
 export { type DrawerPopupProps } from './drawer-popup';
 export { type DrawerRootProps } from './drawer-root';
 export { type DrawerComponentProps } from './drawer-types';
+export { type SnapPointValue } from './resolve-snap-model';
 
 export const Drawer = {
 	Root: DrawerRoot,

@@ -47,7 +47,7 @@ export function DrawerIndent(props: DrawerIndentProps) {
 		stateAttributesMapping: indentStateMapping,
 		props: {
 			className,
-			style: { '--drawer-scroll-progress': '1', ...userStyle } as React.CSSProperties,
+			style: userStyle,
 			...rest,
 		},
 	});

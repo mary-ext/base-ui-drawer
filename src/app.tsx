@@ -1,7 +1,8 @@
-import { CreditCard, MessageSquare } from 'lucide-react';
+import { CreditCard, Disc3, MessageSquare } from 'lucide-react';
 import { useSyncExternalStore } from 'react';
 
 import { CommentsExample } from './examples/comments';
+import { MusicPlayerExample } from './examples/music-player';
 import { PaymentExample } from './examples/payment';
 
 // #region routes
@@ -16,6 +17,11 @@ const routes: Record<string, { name: string; icon: React.ReactNode; component: R
 		name: 'payment',
 		icon: <CreditCard size={20} />,
 		component: PaymentExample,
+	},
+	'music-player': {
+		name: 'music player',
+		icon: <Disc3 size={20} />,
+		component: MusicPlayerExample,
 	},
 };
 

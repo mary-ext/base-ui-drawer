@@ -247,7 +247,7 @@ export function CommentsExample() {
 	return (
 		<Drawer.Root snapPoints={[0.5, 1]}>
 			<Drawer.IndentBackground className="fixed inset-0 bg-black" />
-			<Drawer.Indent className="relative grid min-h-svh w-full origin-[center_top] transform-[scale(1)_translateY(0)] place-items-center content-center gap-4 bg-background duration-[calc(500ms*var(--t)),calc(250ms*var(--t))] will-change-transform [--p:var(--drawer-scroll-progress)] [--r:calc(var(--radius-xl)*var(--p))] [--t:calc(1-clamp(0,calc((1-var(--p))*100000),1))] [transition:transform_0.5s_cubic-bezier(0.32,0.72,0,1),border-radius_0.25s_cubic-bezier(0.32,0.72,0,1)] data-active:transform-[scale(calc(1-0.04*var(--p)))_translateY(calc(12px*var(--p)))] data-active:overflow-hidden data-active:rounded-(--r)">
+			<Drawer.Indent className="relative grid min-h-svh w-full origin-[center_top] translate-y-0 scale-100 place-items-center content-center gap-4 bg-background duration-[calc(500ms*var(--t)),calc(250ms*var(--t))] will-change-transform [--p:var(--drawer-scroll-progress)] [--r:calc(var(--radius-xl)*var(--p))] [--t:calc(1-clamp(0,calc((1-var(--p))*100000),1))] [transition:scale_0.5s_cubic-bezier(0.32,0.72,0,1),translate_0.5s_cubic-bezier(0.32,0.72,0,1),border-radius_0.25s_cubic-bezier(0.32,0.72,0,1)] data-active:translate-y-[calc(12px*var(--p))] data-active:scale-[calc(1-0.04*var(--p))] data-active:overflow-hidden data-active:rounded-(--r)">
 				<h1 className="text-5xl font-bold sm:text-7xl">comments</h1>
 				<Drawer.Trigger className="cursor-pointer rounded-lg border border-border bg-transparent px-8 py-4 text-foreground hover:bg-accent">
 					💬 {commentCount} comments

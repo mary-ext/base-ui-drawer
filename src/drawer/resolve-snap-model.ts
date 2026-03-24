@@ -1,6 +1,9 @@
 /** tolerance in pixels for scroll position comparisons */
 export const SCROLL_EPSILON = 1;
 
+/** a snap point value — number (0-1) for viewport fractions, string for CSS units like `'72px'` or `'4rem'` */
+export type SnapPointValue = number | string;
+
 export interface SnapModel {
 	/** scroller.scrollHeight - scroller.clientHeight */
 	maxScrollTop: number;
@@ -11,25 +14,52 @@ export interface SnapModel {
 }
 
 /**
- * resolves fractional snap points (0-1 of viewport) into concrete pixel
- * scrollTop targets. when no snap points are provided, falls back to a
- * single resting position at maxScrollTop (fully open).
+ * resolves a single snap point value to a pixel scrollTop target.
+ * numbers 0-1 are treated as viewport fractions; strings are parsed as CSS units.
+ *
+ * @param value the snap point value
+ * @param viewportHeight the scroller's clientHeight
+ * @returns pixel value, or 0 if unparseable
+ */
+function resolveSnapValue(value: SnapPointValue, viewportHeight: number): number {
+	if (typeof value === 'number') {
+		return Math.round(value * viewportHeight);
+	}
+
+	const num = parseFloat(value);
+	if (Number.isNaN(num)) {
+		return 0;
+	}
+
+	if (value.endsWith('rem')) {
+		const fontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+		return Math.round(num * fontSize);
+	}
+
+	// px, or bare number — treat as pixels
+	return Math.round(num);
+}
+
+/**
+ * resolves snap points into concrete pixel scrollTop targets.
+ * accepts viewport fractions (0-1) and CSS unit strings (`'72px'`, `'4rem'`).
+ * when no snap points are provided, falls back to a single resting position
+ * at maxScrollTop (fully open).
  *
  * @param viewportHeight the scroller's clientHeight
  * @param maxScrollTop scroller.scrollHeight - scroller.clientHeight
- * @param snapPoints fractions of viewport height (0-1)
- * @param defaultSnapPoint fraction to open to initially
+ * @param snapPoints viewport fractions or CSS unit strings
+ * @param defaultSnapPoint initial snap position
  * @returns resolved snap model
  */
 export function resolveSnapModel(
 	viewportHeight: number,
 	maxScrollTop: number,
-	snapPoints?: number[],
-	defaultSnapPoint?: number,
+	snapPoints?: SnapPointValue[],
+	defaultSnapPoint?: SnapPointValue,
 ): SnapModel {
 	const requested = (snapPoints ?? [])
-		.filter((n) => n > 0)
-		.map((n) => Math.min(Math.round(n * viewportHeight), maxScrollTop))
+		.map((point) => Math.min(resolveSnapValue(point, viewportHeight), maxScrollTop))
 		.filter((top) => top > 0);
 
 	const restingTops = [...new Set(requested)].sort((a, b) => a - b);
@@ -40,7 +70,7 @@ export function resolveSnapModel(
 
 	const rawDefault =
 		defaultSnapPoint != null
-			? Math.min(Math.max(Math.round(defaultSnapPoint * viewportHeight), 0), maxScrollTop)
+			? Math.min(Math.max(resolveSnapValue(defaultSnapPoint, viewportHeight), 0), maxScrollTop)
 			: restingTops[0];
 
 	// snap defaultTop to the nearest valid resting position

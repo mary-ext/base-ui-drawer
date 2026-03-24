@@ -1,12 +1,14 @@
 import { createContext, use } from 'react';
 
 import type { DrawerStore } from './drawer-store';
+import type { SnapPointValue } from './resolve-snap-model';
 
 export interface DrawerContextValue {
 	store: DrawerStore;
-	snapPoints?: number[];
-	defaultSnapPoint?: number;
+	snapPoints?: SnapPointValue[];
+	defaultSnapPoint?: SnapPointValue;
 	locked: boolean;
+	modal: boolean | 'trap-focus';
 }
 
 export const DrawerContext = createContext<DrawerContextValue | null>(null);

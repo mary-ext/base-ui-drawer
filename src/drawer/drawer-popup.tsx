@@ -50,6 +50,11 @@ const slideStyle: React.CSSProperties = {
 	flexShrink: 0,
 };
 
+const slideNonModalStyle: React.CSSProperties = {
+	...slideStyle,
+	pointerEvents: 'auto',
+};
+
 const anchorsStyle: React.CSSProperties = {
 	pointerEvents: 'none',
 	position: 'absolute',
@@ -76,7 +81,8 @@ export interface DrawerPopupProps extends React.ComponentProps<typeof Dialog.Pop
 export function DrawerPopup(props: DrawerPopupProps) {
 	const { children, style, initialFocus, ...rest } = props;
 
-	const { store, snapPoints, defaultSnapPoint, locked } = useDrawerContext();
+	const { store, snapPoints, defaultSnapPoint, locked, modal } = useDrawerContext();
+	const nonModal = modal === false;
 	const { scrollerRef, slideRef, topAnchorRef, indentRef, backdropRef, snapModelRef } = store.context;
 	const popupRef = useRef<HTMLDivElement>(null);
 	const open = store.useState('open');
@@ -86,7 +92,10 @@ export function DrawerPopup(props: DrawerPopupProps) {
 	const setSnapIndex = store.useStateSetter('snapIndex');
 	const setExpanded = store.useStateSetter('expanded');
 
-	const progressTargets = useMemo(() => [indentRef, backdropRef], [indentRef, backdropRef]);
+	const progressTargets = useMemo(
+		() => [indentRef, backdropRef, slideRef],
+		[indentRef, backdropRef, slideRef],
+	);
 
 	const [snapModel, setSnapModel] = useState<SnapModel | null>(null);
 	// scroll-snap is disabled until the browser has accepted the initial scroll position.
@@ -187,12 +196,20 @@ export function DrawerPopup(props: DrawerPopupProps) {
 		scroller.scrollTop = snapModel.defaultTop;
 		hasOpenedRef.current = true;
 
+		// set initial scroll progress before the first paint so CSS-variable-driven
+		// animations (crossfade, indent scale) start at the correct value.
+		const initialProgress =
+			snapModel.maxScrollTop > 0 ? String(Math.min(1, snapModel.defaultTop / snapModel.maxScrollTop)) : '0';
+		for (const ref of progressTargets) {
+			ref.current?.style.setProperty('--drawer-scroll-progress', initialProgress);
+		}
+
 		// set initial snap index from the default position
 		const { restingTops } = snapModel;
 		const closest = findClosestSnapIndex(snapModel.defaultTop, restingTops);
 		store.set('snapIndex', closest);
 		store.set('expanded', closest === restingTops.length - 1);
-	}, [open, snapModel, scrollerRef, store]);
+	}, [open, snapModel, scrollerRef, store, progressTargets]);
 
 	// enable scroll-snap AFTER the first paint so the browser doesn't override
 	// our programmatic scrollTop with a snap correction.
@@ -226,7 +243,7 @@ export function DrawerPopup(props: DrawerPopupProps) {
 	// also ignore clicks when a nested dialog is open (the parent popup gets
 	// data-nested-dialog-open, and clicks in the nested area shouldn't dismiss the parent).
 	const handleScrollerClick = (event: React.MouseEvent) => {
-		if (locked) {
+		if (locked || nonModal) {
 			return;
 		}
 		if (!(event.target instanceof HTMLElement)) {
@@ -269,11 +286,13 @@ export function DrawerPopup(props: DrawerPopupProps) {
 				width: 'unset',
 				height: 'unset',
 				overflow: 'hidden',
+				// non-modal: let pointer events pass through to the page behind
+				...(nonModal && { pointerEvents: 'none' }),
 				...style,
 			}}
 		>
 			<div ref={scrollerRef} onClick={handleScrollerClick} style={scrollerActiveStyle}>
-				<div ref={slideRef} style={slideStyle}>
+				<div ref={slideRef} style={nonModal ? slideNonModalStyle : slideStyle}>
 					<div style={anchorsStyle}>
 						{/* dismiss anchor — above the slide */}
 						<div ref={topAnchorRef} style={{ ...snapAnchorBaseStyle, top: -SNAP_ANCHOR_SIZE }} />

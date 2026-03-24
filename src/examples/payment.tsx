@@ -27,13 +27,30 @@ function formatPrice(n: number): string {
 	return `$${n.toFixed(2)}`;
 }
 
-// #endregion
+const breakdown = [
+	{ label: 'Subtotal', value: subtotal },
+	{ label: 'Shipping', value: shipping },
+	{ label: 'Tax', value: tax },
+];
 
-// #region status type
+// #endregion
 
 type Status = 'idle' | 'processing' | 'success';
 
-// #endregion
+function CartItemRow({ item, detail }: { item: CartItem; detail: string }) {
+	return (
+		<div className="flex items-center gap-3">
+			<span className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-lg">
+				{item.emoji}
+			</span>
+			<div className="flex flex-1 flex-col">
+				<span className="text-sm font-medium">{item.name}</span>
+				<span className="text-sm text-muted-foreground">{detail}</span>
+			</div>
+			<span className="text-sm font-medium">{formatPrice(item.price * item.qty)}</span>
+		</div>
+	);
+}
 
 // #region payment example
 
@@ -76,7 +93,7 @@ export function PaymentExample() {
 			locked={status === 'processing'}
 		>
 			<Drawer.IndentBackground className="fixed inset-0 bg-black" />
-			<Drawer.Indent className="relative grid min-h-svh w-full origin-[center_top] transform-[scale(1)_translateY(0)] place-items-center content-center gap-8 bg-background p-8 duration-[calc(500ms*var(--t)),calc(250ms*var(--t))] will-change-transform [--p:var(--drawer-scroll-progress)] [--r:calc(var(--radius-xl)*var(--p))] [--t:calc(1-clamp(0,calc((1-var(--p))*100000),1))] [transition:transform_0.5s_cubic-bezier(0.32,0.72,0,1),border-radius_0.25s_cubic-bezier(0.32,0.72,0,1)] data-active:transform-[scale(calc(1-0.04*var(--p)))_translateY(calc(12px*var(--p)))] data-active:overflow-hidden data-active:rounded-(--r)">
+			<Drawer.Indent className="relative grid min-h-svh w-full origin-[center_top] translate-y-0 scale-100 place-items-center content-center gap-8 bg-background p-8 duration-[calc(500ms*var(--t)),calc(250ms*var(--t))] will-change-transform [--p:var(--drawer-scroll-progress)] [--r:calc(var(--radius-xl)*var(--p))] [--t:calc(1-clamp(0,calc((1-var(--p))*100000),1))] [transition:scale_0.5s_cubic-bezier(0.32,0.72,0,1),translate_0.5s_cubic-bezier(0.32,0.72,0,1),border-radius_0.25s_cubic-bezier(0.32,0.72,0,1)] data-active:translate-y-[calc(12px*var(--p))] data-active:scale-[calc(1-0.04*var(--p))] data-active:overflow-hidden data-active:rounded-(--r)">
 				<div className="flex flex-col items-center gap-2">
 					<h1 className="text-5xl font-bold sm:text-7xl">payment</h1>
 					<p className="text-lg text-muted-foreground">locked drawer during checkout</p>
@@ -86,25 +103,11 @@ export function PaymentExample() {
 				<div className="flex w-full max-w-sm flex-col gap-4">
 					<div className="flex flex-col gap-3 rounded-xl border border-border p-4">
 						{cartItems.map((item) => (
-							<div key={item.name} className="flex items-center gap-3">
-								<span className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-lg">
-									{item.emoji}
-								</span>
-								<div className="flex flex-1 flex-col">
-									<span className="text-sm font-medium">{item.name}</span>
-									<span className="text-sm text-muted-foreground">
-										{formatPrice(item.price)} × {item.qty}
-									</span>
-								</div>
-								<span className="text-sm font-medium">{formatPrice(item.price * item.qty)}</span>
-							</div>
+							<CartItemRow key={item.name} item={item} detail={`${formatPrice(item.price)} × ${item.qty}`} />
 						))}
 					</div>
 
-					<Drawer.Trigger
-						onClick={() => setOpen(true)}
-						className="flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-foreground px-8 py-4 text-background hover:opacity-90"
-					>
+					<Drawer.Trigger className="flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-foreground px-8 py-4 text-background hover:opacity-90">
 						<ShoppingBag size={20} />
 						Checkout {formatPrice(total)}
 					</Drawer.Trigger>
@@ -133,33 +136,18 @@ export function PaymentExample() {
 						{/* order items */}
 						<div className="flex flex-col gap-3 px-4 pb-4">
 							{cartItems.map((item) => (
-								<div key={item.name} className="flex items-center gap-3">
-									<span className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-lg">
-										{item.emoji}
-									</span>
-									<div className="flex flex-1 flex-col">
-										<span className="text-sm font-medium">{item.name}</span>
-										<span className="text-sm text-muted-foreground">Qty: {item.qty}</span>
-									</div>
-									<span className="text-sm font-medium">{formatPrice(item.price * item.qty)}</span>
-								</div>
+								<CartItemRow key={item.name} item={item} detail={`Qty: ${item.qty}`} />
 							))}
 						</div>
 
 						{/* breakdown */}
 						<div className="flex flex-col gap-2 border-t border-border px-4 pt-4 pb-4">
-							<div className="flex justify-between text-sm text-muted-foreground">
-								<span>Subtotal</span>
-								<span>{formatPrice(subtotal)}</span>
-							</div>
-							<div className="flex justify-between text-sm text-muted-foreground">
-								<span>Shipping</span>
-								<span>{formatPrice(shipping)}</span>
-							</div>
-							<div className="flex justify-between text-sm text-muted-foreground">
-								<span>Tax</span>
-								<span>{formatPrice(tax)}</span>
-							</div>
+							{breakdown.map((row) => (
+								<div key={row.label} className="flex justify-between text-sm text-muted-foreground">
+									<span>{row.label}</span>
+									<span>{formatPrice(row.value)}</span>
+								</div>
+							))}
 						</div>
 
 						{/* payment method */}

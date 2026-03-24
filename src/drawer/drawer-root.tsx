@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { DrawerContext, type DrawerContextValue } from './drawer-context';
 import { DrawerStore } from './drawer-store';
+import type { SnapPointValue } from './resolve-snap-model';
 
 export interface DrawerRootProps {
 	children: React.ReactNode;
@@ -21,15 +22,16 @@ export interface DrawerRootProps {
 	 */
 	modal?: boolean | 'trap-focus';
 	/**
-	 * fractions of viewport height (0-1) where the drawer can rest.
-	 * e.g. `[0.3, 0.6]` means the drawer snaps to 30% and 60% of viewport.
+	 * positions where the drawer can rest. numbers (0-1) are viewport fractions,
+	 * strings are CSS units (e.g. `'72px'`, `'4rem'`).
+	 * e.g. `[0.3, 0.6]` snaps to 30% and 60%, `['72px', 1]` snaps to 72px and 100%.
 	 */
-	snapPoints?: number[];
+	snapPoints?: SnapPointValue[];
 	/**
-	 * fraction of viewport height (0-1) the drawer opens to initially.
-	 * defaults to the largest snap point.
+	 * position the drawer opens to initially. accepts the same format as `snapPoints`.
+	 * defaults to the smallest snap point.
 	 */
-	defaultSnapPoint?: number;
+	defaultSnapPoint?: SnapPointValue;
 	/** callback fired when the active snap point changes */
 	onSnapPointChange?: (snapIndex: number) => void;
 	/**
@@ -109,8 +111,8 @@ export function DrawerRoot(props: DrawerRootProps) {
 	}, [store]);
 
 	const contextValue: DrawerContextValue = useMemo(
-		() => ({ store, snapPoints, defaultSnapPoint, locked }),
-		[store, snapPoints, defaultSnapPoint, locked],
+		() => ({ store, snapPoints, defaultSnapPoint, locked, modal }),
+		[store, snapPoints, defaultSnapPoint, locked, modal],
 	);
 
 	return (
