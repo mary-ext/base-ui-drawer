@@ -17,10 +17,9 @@ import {
 	Timer,
 	X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
-import { Drawer } from '../drawer/drawer';
-import { useDrawerStore } from '../drawer/drawer-context';
+import { Drawer, type DrawerRootActions } from '../drawer/drawer';
 
 // #region data
 
@@ -109,13 +108,11 @@ function AlbumArt({ color, size }: { color: string; size: 'sm' | 'lg' }) {
 
 // #region collapse button
 
-function CollapseButton() {
-	const store = useDrawerStore();
-
+function CollapseButton({ actionsRef }: { actionsRef: React.RefObject<DrawerRootActions | null> }) {
 	return (
 		<button
 			type="button"
-			onClick={() => store.collapse()}
+			onClick={() => actionsRef.current?.collapse()}
 			className="cursor-pointer border-0 bg-transparent p-1 text-white/50 hover:text-white"
 		>
 			<ChevronDown size={20} />
@@ -127,17 +124,23 @@ function CollapseButton() {
 
 // #region mini player bar
 
-function MiniPlayerBar({ playing, onToggle }: { playing: boolean; onToggle: () => void }) {
-	const store = useDrawerStore();
-
+function MiniPlayerBar({
+	playing,
+	onToggle,
+	actionsRef,
+}: {
+	playing: boolean;
+	onToggle: () => void;
+	actionsRef: React.RefObject<DrawerRootActions | null>;
+}) {
 	return (
 		<div
 			role="button"
 			tabIndex={0}
-			onClick={() => store.expand()}
+			onClick={() => actionsRef.current?.expand()}
 			onKeyDown={(e) => {
 				if (e.key === 'Enter' || e.key === ' ') {
-					store.expand();
+					actionsRef.current?.expand();
 				}
 			}}
 			className="flex h-18 shrink-0 cursor-pointer items-center gap-3 px-4"
@@ -499,6 +502,7 @@ function HomePage() {
 
 export function MusicPlayerExample() {
 	const [playing, setPlaying] = useState(true);
+	const actionsRef = useRef<DrawerRootActions>(null);
 
 	return (
 		<Drawer.Root
@@ -509,6 +513,7 @@ export function MusicPlayerExample() {
 			snapPoints={['72px', 1]}
 			defaultSnapPoint="72px"
 			modal={false}
+			actionsRef={actionsRef}
 		>
 			<Drawer.IndentBackground className="fixed inset-0 bg-black" />
 			<Drawer.Indent className="relative min-h-svh w-full origin-[center_top] translate-y-0 scale-100 bg-[oklch(0.15_0.01_280)] duration-[calc(500ms*var(--t)),calc(250ms*var(--t))] will-change-transform [--p:clamp(0,calc((var(--drawer-scroll-progress,0)-0.12)/0.88),1)] [--r:calc(var(--radius-xl)*var(--p))] [--t:calc(1-clamp(0,calc((1-var(--p))*100000),1))] [transition:scale_0.5s_cubic-bezier(0.32,0.72,0,1),translate_0.5s_cubic-bezier(0.32,0.72,0,1),border-radius_0.25s_cubic-bezier(0.32,0.72,0,1)] data-active:translate-y-[calc(12px*var(--p))] data-active:scale-[calc(1-0.04*var(--p))] data-active:overflow-hidden data-active:rounded-(--r)">
@@ -526,13 +531,13 @@ export function MusicPlayerExample() {
 						<Drawer.Handle className="relative flex h-18 shrink-0 select-none">
 							{/* mini-player bar — visible at peek, inert when expanded */}
 							<div className="absolute inset-0 opacity-[clamp(0,calc(1.5-var(--drawer-scroll-progress,0)*5),1)] group-data-expanded/content:pointer-events-none">
-								<MiniPlayerBar playing={playing} onToggle={() => setPlaying((p) => !p)} />
+								<MiniPlayerBar playing={playing} onToggle={() => setPlaying((p) => !p)} actionsRef={actionsRef} />
 							</div>
 							{/* full header — visible when expanded, inert at peek */}
 							<div className="pointer-events-none absolute inset-0 flex flex-col items-center pt-2 pb-1 opacity-[clamp(0,calc(var(--drawer-scroll-progress,0)*5-1),1)] group-data-expanded/content:pointer-events-auto">
 								<span className="mb-1 h-1 w-9 cursor-grab rounded-full bg-white/20" />
 								<div className="flex w-full items-center justify-between px-4 py-1">
-									<CollapseButton />
+									<CollapseButton actionsRef={actionsRef} />
 									<div className="flex flex-col items-center">
 										<span className="text-[10px] font-medium tracking-wider text-white/50 uppercase">
 											Playing from album

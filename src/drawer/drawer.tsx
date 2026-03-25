@@ -16,7 +16,7 @@ export {
 	type DrawerIndentBackgroundProps,
 } from './drawer-indent-background';
 export { type DrawerPopupProps } from './drawer-popup';
-export { type DrawerRootProps } from './drawer-root';
+export { type DrawerRootActions, type DrawerRootProps } from './drawer-root';
 export { type DrawerComponentProps } from './drawer-types';
 export { type SnapPointValue } from './resolve-snap-model';
 

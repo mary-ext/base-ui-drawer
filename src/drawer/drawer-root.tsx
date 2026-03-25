@@ -1,10 +1,21 @@
 import { Dialog } from '@base-ui/react/dialog';
 import { useRefWithInit } from '@base-ui/utils/useRefWithInit';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 
 import { DrawerContext, type DrawerContextValue } from './drawer-context';
 import { DrawerStore } from './drawer-store';
 import type { SnapPointValue } from './resolve-snap-model';
+
+export interface DrawerRootActions {
+	/** smoothly scrolls the drawer to its largest snap point */
+	expand: () => void;
+	/** smoothly scrolls the drawer to its smallest snap point */
+	collapse: () => void;
+	/** smoothly scrolls the drawer to the snap point at the given index */
+	snapTo: (index: number) => void;
+	/** requests the dialog to close */
+	requestClose: () => void;
+}
 
 export interface DrawerRootProps {
 	children: React.ReactNode;
@@ -43,6 +54,11 @@ export interface DrawerRootProps {
 	 * @default false
 	 */
 	locked?: boolean;
+	/**
+	 * a ref to imperative actions for controlling the drawer programmatically.
+	 * exposes `expand`, `collapse`, `snapTo`, and `requestClose` methods.
+	 */
+	actionsRef?: React.RefObject<DrawerRootActions | null>;
 }
 
 /**
@@ -61,6 +77,7 @@ export function DrawerRoot(props: DrawerRootProps) {
 		defaultSnapPoint,
 		onSnapPointChange,
 		locked = false,
+		actionsRef,
 	} = props;
 
 	const store = useRefWithInit(() => new DrawerStore({ open: defaultOpen, openProp })).current;
@@ -68,6 +85,17 @@ export function DrawerRoot(props: DrawerRootProps) {
 	// sync the controlled open prop into the store so that
 	// store.useState('open') reflects the controlled value via the openProp ?? open selector
 	store.useControlledProp('openProp', openProp);
+
+	useImperativeHandle(
+		actionsRef,
+		() => ({
+			expand: store.expand,
+			collapse: store.collapse,
+			snapTo: store.snapTo,
+			requestClose: store.requestClose,
+		}),
+		[store],
+	);
 
 	const handleOpenChange = useCallback(
 		(nextOpen: boolean, event: { reason: string }) => {
