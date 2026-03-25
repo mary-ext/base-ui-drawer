@@ -132,7 +132,7 @@ export function DrawerRoot(props: DrawerRootProps) {
 				isFirst = false;
 				return;
 			}
-			if (store.state.open) {
+			if (store.state.openProp ?? store.state.open) {
 				onSnapPointChangeRef.current?.(snapIndex);
 			}
 		});

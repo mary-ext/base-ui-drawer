@@ -93,7 +93,10 @@ const moreActions = [
 // #region album art placeholder
 
 function AlbumArt({ color, size }: { color: string; size: 'sm' | 'lg' }) {
-	const dim = size === 'sm' ? 'h-10 w-10 shrink-0 rounded-md' : 'h-[100cqmin] w-[100cqmin] max-h-96 max-w-96 rounded-xl';
+	const dim =
+		size === 'sm'
+			? 'h-10 w-10 shrink-0 rounded-md'
+			: 'h-[100cqmin] w-[100cqmin] max-h-96 max-w-96 rounded-xl';
 	return (
 		<div
 			className={`${dim} flex items-center justify-center`}
@@ -172,8 +175,8 @@ function FullPlayer({ playing, onToggle }: { playing: boolean; onToggle: () => v
 	return (
 		<div className="flex h-[calc(95svh-72px-32px)] shrink-0 flex-col items-center justify-between px-6 pt-4 pb-6">
 			{/* album art — grows to fill available space */}
-			<div className="w-full min-h-0 flex-1 py-4">
-				<div className="flex h-full w-full items-center justify-center @container-[size]">
+			<div className="min-h-0 w-full flex-1 py-4">
+				<div className="@container-[size] flex h-full w-full items-center justify-center">
 					<AlbumArt color={nowPlaying.color} size="lg" />
 				</div>
 			</div>
@@ -502,17 +505,20 @@ function HomePage() {
 
 export function MusicPlayerExample() {
 	const [playing, setPlaying] = useState(true);
+	const [expanded, setExpanded] = useState(false);
 	const actionsRef = useRef<DrawerRootActions>(null);
 
 	return (
 		<Drawer.Root
 			open
 			onOpenChange={() => {
-				// keep drawer always open — swipe-to-dismiss bounces back
+				// drawer is always open — collapse to mini player instead of dismissing
+				actionsRef.current?.collapse();
 			}}
 			snapPoints={['72px', 1]}
 			defaultSnapPoint="72px"
-			modal={false}
+			modal={expanded}
+			onSnapPointChange={(index) => setExpanded(index === 1)}
 			actionsRef={actionsRef}
 		>
 			<Drawer.IndentBackground className="fixed inset-0 bg-black" />
@@ -531,7 +537,11 @@ export function MusicPlayerExample() {
 						<Drawer.Handle className="relative flex h-18 shrink-0 select-none">
 							{/* mini-player bar — visible at peek, inert when expanded */}
 							<div className="absolute inset-0 opacity-[clamp(0,calc(1.5-var(--drawer-scroll-progress,0)*5),1)] group-data-expanded/content:pointer-events-none">
-								<MiniPlayerBar playing={playing} onToggle={() => setPlaying((p) => !p)} actionsRef={actionsRef} />
+								<MiniPlayerBar
+									playing={playing}
+									onToggle={() => setPlaying((p) => !p)}
+									actionsRef={actionsRef}
+								/>
 							</div>
 							{/* full header — visible when expanded, inert at peek */}
 							<div className="pointer-events-none absolute inset-0 flex flex-col items-center pt-2 pb-1 opacity-[clamp(0,calc(var(--drawer-scroll-progress,0)*5-1),1)] group-data-expanded/content:pointer-events-auto">
