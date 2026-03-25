@@ -94,10 +94,10 @@ const moreActions = [
 // #region album art placeholder
 
 function AlbumArt({ color, size }: { color: string; size: 'sm' | 'lg' }) {
-	const dim = size === 'sm' ? 'h-10 w-10 rounded-md' : 'aspect-square w-full max-w-sm rounded-xl';
+	const dim = size === 'sm' ? 'h-10 w-10 shrink-0 rounded-md' : 'h-[100cqmin] w-[100cqmin] max-h-96 max-w-96 rounded-xl';
 	return (
 		<div
-			className={`${dim} flex shrink-0 items-center justify-center`}
+			className={`${dim} flex items-center justify-center`}
 			style={{ background: `linear-gradient(135deg, ${color}, oklch(0.3 0.05 300))` }}
 		>
 			<Disc3 size={size === 'sm' ? 18 : 48} className="text-white/40" />
@@ -167,10 +167,12 @@ function MiniPlayerBar({ playing, onToggle }: { playing: boolean; onToggle: () =
 
 function FullPlayer({ playing, onToggle }: { playing: boolean; onToggle: () => void }) {
 	return (
-		<div className="flex min-h-[calc(95svh-72px-32px)] flex-col items-center justify-between px-6 pt-4 pb-6">
+		<div className="flex h-[calc(95svh-72px-32px)] shrink-0 flex-col items-center justify-between px-6 pt-4 pb-6">
 			{/* album art — grows to fill available space */}
-			<div className="flex w-full flex-1 items-center justify-center py-4">
-				<AlbumArt color={nowPlaying.color} size="lg" />
+			<div className="w-full min-h-0 flex-1 py-4">
+				<div className="flex h-full w-full items-center justify-center @container-[size]">
+					<AlbumArt color={nowPlaying.color} size="lg" />
+				</div>
 			</div>
 
 			{/* track info */}
